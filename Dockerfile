@@ -10,7 +10,7 @@ RUN apk add --no-cache python3 make g++
 COPY skyoffice/package*.json ./skyoffice/
 COPY skyoffice/tsconfig.server.build.json ./skyoffice/
 COPY skyoffice/server/tsconfig.server.json ./skyoffice/server/
-RUN cd skyoffice && npm ci
+RUN cd skyoffice && npm ci --include=dev
 
 FROM deps AS builder
 COPY skyoffice ./skyoffice
