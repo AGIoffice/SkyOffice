@@ -89,11 +89,28 @@ export function saveNpc(npc: PersistedNpc) {
   )
 }
 
+type NpcRow = {
+  agentId: string
+  registryAgentId?: string | null
+  officeId?: string | null
+  name: string
+  avatarId: string
+  workstationId: string
+  positionX: number
+  positionY: number
+  role?: string | null
+  computerId?: string | null
+  roomName?: string | null
+  voiceAgentId?: string | null
+  namespaceSlug?: string | null
+  agentMetadata?: string | null
+}
+
 export function allNpcs(): PersistedNpc[] {
   const db = ensureNpcTable()
   const stmt = db.prepare('SELECT * FROM npcs')
-  const rows = stmt.all()
-  return rows.map((row) => {
+  const rows = stmt.all() as NpcRow[]
+  return rows.map((row: NpcRow) => {
     let metadata: Record<string, unknown> | null = null
     if (typeof row.agentMetadata === 'string' && row.agentMetadata.trim()) {
       try {

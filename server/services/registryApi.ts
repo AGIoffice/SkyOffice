@@ -11,6 +11,7 @@ export interface RegistryOffice {
 export interface RegistryAgent {
   id: string
   agentIdentifier?: string | null
+  agentEmail?: string | null
   displayName?: string | null
   avatarId?: string | null
   workstationId?: string | null

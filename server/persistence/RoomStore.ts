@@ -29,10 +29,17 @@ export function saveRoom(room: PersistedRoom) {
   stmt.run({ ...room, autoDispose: room.autoDispose ? 1 : 0 })
 }
 
+type RoomRow = {
+  name: string
+  description: string
+  password?: string | null
+  autoDispose?: number | null
+}
+
 export function allRooms(): PersistedRoom[] {
   const db = ensureTable()
-  const rows = db.prepare(`SELECT name, description, password, autoDispose FROM rooms`).all()
-  return rows.map((row) => ({
+  const rows = db.prepare(`SELECT name, description, password, autoDispose FROM rooms`).all() as RoomRow[]
+  return rows.map((row: RoomRow) => ({
     name: row.name,
     description: row.description,
     password: row.password ?? null,
