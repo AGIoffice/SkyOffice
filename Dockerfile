@@ -26,6 +26,7 @@ COPY --from=builder /app/skyoffice/node_modules ./node_modules
 COPY skyoffice/package.json .
 COPY skyoffice/package-lock.json .
 RUN mkdir -p /app/dist/skyoffice/server/data
+RUN chown -R node:node /app
 EXPOSE 3010
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fsS "http://127.0.0.1:${PORT:-3010}/healthz" || exit 1
