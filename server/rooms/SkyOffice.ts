@@ -141,7 +141,7 @@ export class SkyOffice extends Room<OfficeState> {
     }
 
     if (registryOfficeId) {
-      patchRegistryOffice(registryOfficeId, { skyofficeWorldId: this.roomId }).catch((err) => {
+      patchRegistryOffice(registryOfficeId, { skyofficeWorldId: this.roomId }).catch((err: unknown) => {
         console.warn('[skyoffice] failed to update registry room mapping', registryOfficeId, this.roomId, err)
       })
     }
@@ -410,7 +410,7 @@ export class SkyOffice extends Room<OfficeState> {
       this.namespaceRooms.delete(slug)
     }
 
-    const persistedNpcs = allNpcs().filter((npc) => {
+    const persistedNpcs = allNpcs().filter((npc: PersistedNpc) => {
       const namespace = (npc.namespaceSlug || npc.roomName || '').toLowerCase()
       if (!namespace) return false
       if (slugCandidates.has(namespace)) return true
@@ -996,7 +996,7 @@ export class SkyOffice extends Room<OfficeState> {
   private ensureNpcAssignmentsLoaded(force = false) {
     if (!force && this.npcAssignments.size > 0) return
 
-    const npcs = allNpcs().filter((npc) => {
+    const npcs = allNpcs().filter((npc: PersistedNpc) => {
       const roomName = npc.roomName || 'Public Lobby'
       return roomName === this.name
     })

@@ -503,7 +503,7 @@ app.get('/api/offices/:officeId/agents', async (req, res) => {
     try {
       const offices = await fetchRegistryOffices()
       if (offices.length > 0) {
-        const match = offices.find((office) => {
+        const match = offices.find((office: RegistryOffice) => {
           const officeId = normalise(office.officeId)
           const registryId = normalise((office as any).id)
           const slug = normalise(office.namespaceSlug)
