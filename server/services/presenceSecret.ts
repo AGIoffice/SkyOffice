@@ -26,6 +26,7 @@ const TENANT_SHARED_SECRET_CACHE_MS = Number(
 const secretCache = new Map<string, PresenceSecretCacheEntry>()
 const tenantSharedSecretCache = new Map<string, { secret: string; timestamp: number }>()
 const tenantSecretLog = new Set<string>()
+let staticSecretLogged = false
 
 function buildAuthHeaders(base: Record<string, string> = {}) {
   const headers: Record<string, string> = { ...base }
@@ -210,6 +211,10 @@ export async function resolvePresenceSecret(
     process.env.SHARED_SECRET ||
     null
   if (staticSecret) {
+    if (!staticSecretLogged) {
+      staticSecretLogged = true
+      console.log('[presence-secret] Using static SKYOFFICE_PRESENCE_SHARED_SECRET from environment')
+    }
     return { secret: staticSecret, source: 'static', timestamp: Date.now() }
   }
 
@@ -227,6 +232,11 @@ export async function resolvePresenceSecret(
   const cacheKey = `${resolvedOfficeId}:${agentId.toLowerCase()}`
   const cachedEntry = secretCache.get(cacheKey)
   if (cachedEntry && Date.now() - cachedEntry.timestamp < SECRET_CACHE_TTL_MS) {
+    console.log('[presence-secret] Using cached presence secret', {
+      officeId: resolvedOfficeId,
+      agentId,
+      source: cachedEntry.source,
+    })
     return cachedEntry
   }
 
@@ -238,6 +248,10 @@ export async function resolvePresenceSecret(
       timestamp: Date.now(),
     }
     secretCache.set(cacheKey, entry)
+    console.log('[presence-secret] Using tenant key presence secret', {
+      officeId: resolvedOfficeId,
+      agentId,
+    })
     return entry
   }
 
@@ -249,6 +263,10 @@ export async function resolvePresenceSecret(
       timestamp: Date.now(),
     }
     secretCache.set(cacheKey, entry)
+    console.log('[presence-secret] Using registry-issued presence secret', {
+      officeId: resolvedOfficeId,
+      agentId,
+    })
     return entry
   }
 
