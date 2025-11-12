@@ -93,7 +93,11 @@ export class SkyOffice extends Room<OfficeState> {
     const resolvedNamespace = (namespaceSlug && namespaceSlug.trim()) || name
 
     this.name = name
-    this.description = description
+    const resolvedDescription =
+      typeof description === 'string' && description.trim().length
+        ? description.trim()
+        : `${name} workspace`
+    this.description = resolvedDescription
     this.autoDispose = autoDisposeOpt ?? false
     this.namespaceSlug = resolvedNamespace.trim().toLowerCase()
     this.customDomain = (metadataOpt?.customDomain as string | undefined) || undefined
@@ -111,7 +115,7 @@ export class SkyOffice extends Room<OfficeState> {
 
     const metadataPayload: Record<string, unknown> = {
       name,
-      description,
+      description: this.description,
       hasPassword,
     }
 
@@ -914,10 +918,12 @@ export class SkyOffice extends Room<OfficeState> {
       }
     }
 
-    let secretSource: 'static' | 'registry' = MANAGER_TOKEN_SECRET ? 'static' : 'registry'
-    const secretToUse =
-      MANAGER_TOKEN_SECRET ||
-      (await resolvePresenceSecret(agentRaw, assignment.officeId || undefined))
+    const presenceSecretResult = await resolvePresenceSecret(
+      agentRaw,
+      assignment.officeId || undefined
+    )
+    const secretSource = presenceSecretResult?.source ?? 'registry'
+    const secretToUse = presenceSecretResult?.secret
     if (!secretToUse) {
       throw new ServerError(503, 'Presence credential unavailable')
     }
@@ -1094,5 +1100,3 @@ export class SkyOffice extends Room<OfficeState> {
     }
   }
 }
-const MANAGER_TOKEN_SECRET =
-  process.env.MANAGER_TOKEN_SECRET || process.env.SKYOFFICE_MANAGER_SECRET || process.env.PRESENCE_MANAGER_SECRET || ''

@@ -32,6 +32,7 @@
     "ts-node-dev": "^1.0.0-pre.63"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.928.0",
     "@colyseus/command": "^0.1.7",
     "@colyseus/monitor": "^0.14.0",
     "@types/bcrypt": "^5.0.0",

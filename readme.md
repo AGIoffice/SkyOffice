@@ -64,6 +64,20 @@ SkyOffice works on all PC browsers (mobile browsers are currently not supported)
 
 You'll need [Node.js](https://nodejs.org/en/), [npm](https://www.npmjs.com/) installed.
 
+## Virtual Office deployment notes
+
+Virtual Office 的 SkyOffice Server 运行在 AWS ECS 上，通过 Registry tenant key 自动解析密钥：
+
+- `shared:skyoffice-server` tenant key → `virtual-office/shared/skyoffice-server` secret，包含 `SKYOFFICE_PRESENCE_SHARED_SECRET`、`REGISTRY_SERVICE_TOKEN`、Redis/日志配置等。
+- `server/services/presenceSecret.ts` 会先调用 `GET /offices/:officeId/tenant-keys`，解析上述 secret，并在日志输出  
+  ```
+  [presence-secret] Loaded SkyOffice secret via tenant key { officeId, secretId }
+  ```
+- 本地调试若无 AWS 权限，可手动导出 `SKYOFFICE_PRESENCE_SHARED_SECRET`。旧变量（`MANAGER_TOKEN_SECRET` / `SKYOFFICE_MANAGER_SECRET`）已删除。
+- 确认 `REGISTRY_SERVICE_URL`、`REGISTRY_SERVICE_TOKEN`、`SKYOFFICE_PRESENCE_ENABLED=1` 已通过 Secrets Manager 注入到 ECS 任务，客户端即可通过 Privy/tenant key 登录。
+
+更多细节参见 `docs/backend-deployment-plan.md` 和 `docs/office-tenant-key-structure.md`。
+
 ## Getting Started
 
 Clone this repository to your local machine:

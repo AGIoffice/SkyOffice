@@ -22,6 +22,16 @@ export interface RegistryAgent {
   metadata?: Record<string, unknown> | null
 }
 
+export interface RegistryTenantKey {
+  id: string
+  officeId: string
+  keyType: string
+  secretsPath: string
+  metadata?: Record<string, unknown> | null
+  createdAt?: string
+  rotatedAt?: string | null
+}
+
 type HeadersInitLike = Record<string, string>
 
 const BASE_URL =
@@ -37,6 +47,14 @@ const SERVICE_TOKEN =
   process.env.REGISTRY_API_TOKEN ||
   process.env.REGISTRY_SERVICE_AUTH_TOKEN ||
   null
+
+const tenantKeyCache = new Map<
+  string,
+  { keys: RegistryTenantKey[]; timestamp: number }
+>()
+const TENANT_KEY_CACHE_TTL_MS = Number(
+  process.env.TENANT_KEY_CACHE_TTL_MS || 5 * 60 * 1000
+)
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs = 5000) {
   if (!AbortCtor) return promise
@@ -149,5 +167,40 @@ export async function patchRegistryOffice(
     }
   } catch (err) {
     console.warn('[registry-api] error patching office', officeId, err)
+  }
+}
+
+export async function fetchOfficeTenantKeys(
+  officeId: string
+): Promise<RegistryTenantKey[]> {
+  if (!officeId || !fetchFn) return []
+  const cached = tenantKeyCache.get(officeId)
+  if (cached && Date.now() - cached.timestamp < TENANT_KEY_CACHE_TTL_MS) {
+    return cached.keys
+  }
+  try {
+    const response = await withTimeout(
+      fetchFn(`${BASE_URL}/offices/${encodeURIComponent(officeId)}/tenant-keys`, {
+        method: 'GET',
+        headers: buildHeaders(),
+      })
+    )
+    if (!response.ok) {
+      console.warn(
+        '[registry-api] failed to fetch tenant keys',
+        officeId,
+        response.status
+      )
+      tenantKeyCache.set(officeId, { keys: [], timestamp: Date.now() })
+      return []
+    }
+    const data = await response.json().catch(() => null)
+    const keys = Array.isArray(data?.keys) ? (data.keys as RegistryTenantKey[]) : []
+    tenantKeyCache.set(officeId, { keys, timestamp: Date.now() })
+    return keys
+  } catch (err) {
+    console.warn('[registry-api] error fetching tenant keys', officeId, err)
+    tenantKeyCache.set(officeId, { keys: [], timestamp: Date.now() })
+    return []
   }
 }
